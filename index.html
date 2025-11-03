@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrimeStat Analytics | Statistical Analysis of Crime Data</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .logo span {
+            color: var(--secondary);
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+
+        nav ul li {
+            margin-left: 1.5rem;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav ul li a:hover {
+            color: var(--secondary);
+        }
+
+        .hero {
+            background: linear-gradient(rgba(44, 62, 80, 0.8), rgba(44, 62, 80, 0.9)), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%232c3e50"/></svg>');
+            color: white;
+            padding: 4rem 0;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--secondary);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+
+        .section {
+            padding: 4rem 0;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--primary);
+        }
+
+        .section-title h2 {
+            font-size: 2rem;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 0.5rem;
+        }
+
+        .section-title h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: var(--secondary);
+        }
+
+        .dashboard {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .chart-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 1rem 0;
+        }
+
+        .stat-value.primary {
+            color: var(--primary);
+        }
+
+        .stat-value.secondary {
+            color: var(--secondary);
+        }
+
+        .stat-value.accent {
+            color: var(--accent);
+        }
+
+        .stat-value.success {
+            color: var(--success);
+        }
+
+        .stat-description {
+            color: #666;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+
+        .data-table th, .data-table td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .data-table th {
+            background-color: var(--light);
+            font-weight: 500;
+        }
+
+        .data-table tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .methodology {
+            background-color: var(--light);
+        }
+
+        .methodology-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .methodology-content p {
+            margin-bottom: 1.5rem;
+        }
+
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 3rem 0 1.5rem;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section {
+            flex: 1;
+            min-width: 250px;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-section h3 {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section ul li a {
+            color: #ddd;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-section ul li a:hover {
+            color: var(--secondary);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            nav ul {
+                margin-top: 1rem;
+                justify-content: center;
+            }
+
+            nav ul li {
+                margin: 0 0.5rem;
+            }
+
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .filters {
+                margin-top: 1rem;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">Crime<span>Stat</span> Analytics</div>
+                <nav>
+                    <ul>
+                        <li><a href="#overview">Overview</a></li>
+                        <li><a href="#dashboard">Dashboard</a></li>
+                        <li><a href="#statistics">Statistics</a></li>
+                        <li><a href="#methodology">Methodology</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Statistical Analysis of Crime Data</h1>
+            <p>Explore comprehensive crime statistics, trends, and patterns with interactive visualizations and data-driven insights.</p>
+            <a href="#dashboard" class="btn">Explore Dashboard</a>
+        </div>
+    </section>
+
+    <!-- Overview Section -->
+    <section id="overview" class="section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Crime Data Overview</h2>
+            </div>
+            <div class="dashboard">
+                <p>This platform provides statistical analysis of crime data from various sources, allowing law enforcement agencies, researchers, and the public to understand crime patterns, trends, and distributions. Our analysis covers multiple crime categories, temporal patterns, and geographical distributions.</p>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Incidents</h3>
+                        <div class="stat-value primary" id="total-incidents">12,458</div>
+                        <p class="stat-description">Recorded crime incidents in the dataset</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Violent Crimes</h3>
+                        <div class="stat-value accent" id="violent-crimes">3,217</div>
+                        <p class="stat-description">Incidents involving violence</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Property Crimes</h3>
+                        <div class="stat-value secondary" id="property-crimes">7,892</div>
+                        <p class="stat-description">Incidents against property</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Clearance Rate</h3>
+                        <div class="stat-value success" id="clearance-rate">42%</div>
+                        <p class="stat-description">Cases resolved by law enforcement</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section id="dashboard" class="section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Interactive Dashboard</h2>
+            </div>
+            <div class="dashboard">
+                <div class="dashboard-header">
+                    <h3>Crime Statistics Dashboard</h3>
+                    <div class="filters">
+                        <select class="filter-select" id="year-filter">
+                            <option value="all">All Years</option>
+                            <option value="2023">2023</option>
+                            <option value="2022">2022</option>
+                            <option value="2021">2021</option>
+                        </select>
+                        <select class="filter-select" id="crime-type-filter">
+                            <option value="all">All Crime Types</option>
+                            <option value="violent">Violent Crimes</option>
+                            <option value="property">Property Crimes</option>
+                            <option value="drug">Drug Offenses</option>
+                        </select>
+                        <select class="filter-select" id="region-filter">
+                            <option value="all">All Regions</option>
+                            <option value="north">Northern District</option>
+                            <option value="south">Southern District</option>
+                            <option value="east">Eastern District</option>
+                            <option value="west">Western District</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="charts-container">
+                    <div class="chart-card">
+                        <h4 class="chart-title">Crime Types Distribution</h4>
+                        <canvas id="crimeTypeChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h4 class="chart-title">Monthly Crime Trends</h4>
+                        <canvas id="monthlyTrendChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h4 class="chart-title">Crime by Time of Day</h4>
+                        <canvas id="timeOfDayChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h4 class="chart-title">Regional Crime Distribution</h4>
+                        <canvas id="regionalChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Statistics Section -->
+    <section id="statistics" class="section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Detailed Statistics</h2>
+            </div>
+            <div class="dashboard">
+                <h3>Crime Data by Category</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Crime Category</th>
+                            <th>Incidents</th>
+                            <th>Percentage</th>
+                            <th>YoY Change</th>
+                            <th>Clearance Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody id="crime-stats-table">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Methodology Section -->
+    <section id="methodology" class="section methodology">
+        <div class="container">
+            <div class="section-title">
+                <h2>Methodology</h2>
+            </div>
+            <div class="methodology-content">
+                <p>Our statistical analysis is based on crime data collected from law enforcement agencies across multiple jurisdictions. The data undergoes a rigorous cleaning and standardization process before analysis.</p>
+                
+                <p><strong>Data Sources:</strong> Our primary data sources include official crime reports from local police departments, FBI Uniform Crime Reporting (UCR) program data, and supplemental data from court records.</p>
+                
+                <p><strong>Analysis Methods:</strong> We employ various statistical techniques including descriptive statistics, time series analysis, correlation analysis, and spatial analysis to identify patterns and trends in crime data.</p>
+                
+                <p><strong>Limitations:</strong> Crime data may be subject to reporting biases, changes in reporting practices over time, and variations in crime classification across jurisdictions.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>CrimeStat Analytics</h3>
+                    <p>Providing data-driven insights into crime patterns and trends for informed decision-making.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#overview">Overview</a></li>
+                        <li><a href="#dashboard">Dashboard</a></li>
+                        <li><a href="#statistics">Statistics</a></li>
+                        <li><a href="#methodology">Methodology</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <ul>
+                        <li>Email: info@crimestat.org</li>
+                        <li>Phone: (555) 123-4567</li>
+                        <li>Address: 123 Justice Ave, Data City</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 CrimeStat Analytics. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Sample crime data
+        const crimeData = {
+            types: {
+                labels: ['Violent Crime', 'Property Crime', 'Drug Offenses', 'Public Order', 'Other'],
+                data: [3217, 7892, 1543, 2341, 1465],
+                colors: ['#e74c3c', '#3498db', '#f39c12', '#9b59b6', '#2ecc71']
+            },
+            monthly: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                data: [1024, 1105, 1056, 987, 1123, 1245, 1321, 1287, 1154, 1032, 987, 1137]
+            },
+            timeOfDay: {
+                labels: ['12AM-3AM', '3AM-6AM', '6AM-9AM', '9AM-12PM', '12PM-3PM', '3PM-6PM', '6PM-9PM', '9PM-12AM'],
+                data: [1854, 987, 765, 1023, 1543, 1876, 2134, 1765]
+            },
+            regional: {
+                labels: ['Northern', 'Southern', 'Eastern', 'Western'],
+                data: [3456, 2876, 3124, 3002]
+            },
+            stats: [
+                { category: 'Homicide', incidents: 87, percentage: 0.7, change: -2.3, clearance: 65.5 },
+                { category: 'Assault', incidents: 2456, percentage: 19.7, change: 3.2, clearance: 48.3 },
+                { category: 'Robbery', incidents: 674, percentage: 5.4, change: -1.5, clearance: 32.7 },
+                { category: 'Burglary', incidents: 1987, percentage: 16.0, change: -4.1, clearance: 18.9 },
+                { category: 'Theft', incidents: 5234, percentage: 42.0, change: 2.7, clearance: 22.4 },
+                { category: 'Drug Offenses', incidents: 1543, percentage: 12.4, change: 5.8, clearance: 78.6 },
+                { category: 'Vandalism', incidents: 674, percentage: 5.4, change: -0.8, clearance: 15.2 }
+            ]
+        };
+
+        // Initialize charts when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Crime Types Distribution Chart
+            const crimeTypeCtx = document.getElementById('crimeTypeChart').getContext('2d');
+            const crimeTypeChart = new Chart(crimeTypeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: crimeData.types.labels,
+                    datasets: [{
+                        data: crimeData.types.data,
+                        backgroundColor: crimeData.types.colors,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = Math.round((value / total) * 100);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Monthly Crime Trends Chart
+            const monthlyTrendCtx = document.getElementById('monthlyTrendChart').getContext('2d');
+            const monthlyTrendChart = new Chart(monthlyTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: crimeData.monthly.labels,
+                    datasets: [{
+                        label: 'Crime Incidents',
+                        data: crimeData.monthly.data,
+                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                        borderColor: 'rgba(52, 152, 219, 1)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Incidents'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Crime by Time of Day Chart
+            const timeOfDayCtx = document.getElementById('timeOfDayChart').getContext('2d');
+            const timeOfDayChart = new Chart(timeOfDayCtx, {
+                type: 'bar',
+                data: {
+                    labels: crimeData.timeOfDay.labels,
+                    datasets: [{
+                        label: 'Crime Incidents',
+                        data: crimeData.timeOfDay.data,
+                        backgroundColor: 'rgba(231, 76, 60, 0.7)',
+                        borderColor: 'rgba(231, 76, 60, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Incidents'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Regional Crime Distribution Chart
+            const regionalCtx = document.getElementById('regionalChart').getContext('2d');
+            const regionalChart = new Chart(regionalCtx, {
+                type: 'bar',
+                data: {
+                    labels: crimeData.regional.labels,
+                    datasets: [{
+                        label: 'Crime Incidents',
+                        data: crimeData.regional.data,
+                        backgroundColor: [
+                            'rgba(52, 152, 219, 0.7)',
+                            'rgba(46, 204, 113, 0.7)',
+                            'rgba(155, 89, 182, 0.7)',
+                            'rgba(241, 196, 15, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(52, 152, 219, 1)',
+                            'rgba(46, 204, 113, 1)',
+                            'rgba(155, 89, 182, 1)',
+                            'rgba(241, 196, 15, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Incidents'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Populate crime statistics table
+            const statsTable = document.getElementById('crime-stats-table');
+            crimeData.stats.forEach(stat => {
+                const row = document.createElement('tr');
+                
+                const changeClass = stat.change >= 0 ? 'positive' : 'negative';
+                const changeSymbol = stat.change >= 0 ? '+' : '';
+                
+                row.innerHTML = `
+                    <td>${stat.category}</td>
+                    <td>${stat.incidents.toLocaleString()}</td>
+                    <td>${stat.percentage}%</td>
+                    <td class="${changeClass}">${changeSymbol}${stat.change}%</td>
+                    <td>${stat.clearance}%</td>
+                `;
+                
+                statsTable.appendChild(row);
+            });
+
+            // Add CSS for positive/negative values in table
+            const style = document.createElement('style');
+            style.textContent = `
+                .positive { color: #27ae60; }
+                .negative { color: #e74c3c; }
+            `;
+            document.head.appendChild(style);
+
+            // Filter functionality
+            document.getElementById('year-filter').addEventListener('change', updateCharts);
+            document.getElementById('crime-type-filter').addEventListener('change', updateCharts);
+            document.getElementById('region-filter').addEventListener('change', updateCharts);
+
+            function updateCharts() {
+                // In a real application, this would fetch new data based on filters
+                // For this demo, we'll just show a message
+                alert('Filters applied! In a real application, this would update the charts with filtered data.');
+            }
+        });
+    </script>
+</body>
+</html>
